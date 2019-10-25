@@ -61,6 +61,11 @@ class MultiqcModule(BaseMultiqcModule):
                 })
         self.write_data_file(self.blobtools_data, 'blobtools_mapping')
 
+        if len(self.blobtools_data) == 0:
+            raise UserWarning
+        self.blobtools_data = self.ignore_samples(self.blobtools_data)
+        log.info("Found {} logs".format(len(self.blobtools_data)))
+
         self.blobtools_species_data=dict()
         self.blobtools_species_keys=list()
         for myfile in self.find_log_files('blobtools/stats'):
@@ -71,6 +76,7 @@ class MultiqcModule(BaseMultiqcModule):
                     if line.split('\t')[0] not in self.blobtools_species_keys:
                         self.blobtools_species_keys.append(line.split('\t')[0])
         self.write_data_file(self.blobtools_species_data, 'blobtools_species')
+        self.blobtools_species_data = self.ignore_samples(self.blobtools_species_data)
 
         self.add_section(
             name = 'Mapping',
