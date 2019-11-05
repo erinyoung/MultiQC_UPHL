@@ -31,6 +31,9 @@ class MultiqcModule(BaseMultiqcModule):
                 description = 'This heatmap shows the score for each sample with the genes supplied from ' + db,
                 plot = self.abricate_heatmap_plot(db) )
 
+
+        if len(self.abricate_data) == 0:
+            raise UserWarning
         log.info("Found {} logs".format(len(self.abricate_data)))
 
     def getdata(self, myfile, db):
