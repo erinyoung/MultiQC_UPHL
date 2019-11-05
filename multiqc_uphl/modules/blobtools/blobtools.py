@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-""" MultiQC submodule to parse output from Samtools stats """
+""" MultiQC submodule to parse output from Blobtools """
 
 import logging
 from multiqc.modules.base_module import BaseMultiqcModule
 import json
 
 from multiqc import config
-from multiqc.plots import bargraph
+from multiqc.plots import bargraph, linegraph, scatter
 
 # Initialise the logger
 log = logging.getLogger('multiqc')
@@ -20,8 +20,10 @@ class MultiqcModule(BaseMultiqcModule):
         href="https://blobtools.readme.io/docs",
         info="is a modular command-line solution for visualisation, quality control and taxonomic partitioning of genome datasets")
 
-        # Find and load any Mash reports
         self.blobtools_data = dict()
+        self.blobtools_gc_data = dict()
+        self.blobtools_cov_data = dict()
+        self.blobtools_blob_data = dict()
         for myfile in self.find_log_files('blobtools/json'):
 #            print(myfile['s_name'])
             contents_of_file = json.loads(myfile['f'])
@@ -37,6 +39,15 @@ class MultiqcModule(BaseMultiqcModule):
             # print(contents_of_file['order_of_blobs'].keys()) # an ordered dictionary of blobs from largest to smallest contigs
             # print(contents_of_file['dict_of_blobs'].keys()) - probably for making the blob plots
 #            print(contents_of_file['dict_of_blobs']['contig00001'].keys())
+#            print(contents_of_file['dict_of_blobs']['contig00001']['name'])
+#            print(contents_of_file['dict_of_blobs']['contig00001']['length'])
+#            print(contents_of_file['dict_of_blobs']['contig00001']['gc'])
+#            print(contents_of_file['dict_of_blobs']['contig00001']['covs']['bam0'])
+#            print(contents_of_file['dict_of_blobs']['contig00001']['read_cov']['bam0'])
+#            for contig in contents_of_file['dict_of_blobs'].keys():
+#                print(contents_of_file['dict_of_blobs'][contig]['name'])
+#                print(contents_of_file['dict_of_blobs'][contig]['taxonomy']['bestsum'].keys())
+#                print(contents_of_file['dict_of_blobs'][contig]['taxonomy']['bestsum'])
 #            print(contents_of_file['dict_of_blobs']['contig00001']['hits'])
 #            for key in contents_of_file['dict_of_blobs']['contig00001'].keys():
 #                print(contents_of_file['dict_of_blobs']['contig00001'][key])
@@ -59,6 +70,13 @@ class MultiqcModule(BaseMultiqcModule):
                 'unmapped': contents_of_file['covLibs']['bam0']['reads_total'] - contents_of_file['covLibs']['bam0']['reads_mapped']
                 }
                 })
+            self.blobtools_parse(myfile, contents_of_file)
+
+
+
+
+
+
         self.write_data_file(self.blobtools_data, 'blobtools_mapping')
 
         if len(self.blobtools_data) == 0:
@@ -90,6 +108,57 @@ class MultiqcModule(BaseMultiqcModule):
             description = 'This plot shows the species that were identified in the reads',
             plot = self.blobtools_species())
 
+        self.add_section(
+            name = 'GC content',
+            anchor = 'blobtool-gc',
+            description = 'This plot shows a histogram of the gc percentage',
+            plot = self.blobtools_gc_graph())
+
+        self.add_section(
+            name = 'Coverage Distribution',
+            anchor = 'blobtool-cov',
+            description = 'This plot shows a histogram of observed coverage',
+            plot = self.blobtools_cov_graph())
+
+        self.add_section(
+            name = 'Blobs',
+            anchor = 'blobtool-blob',
+            description = 'This plot shows a blob',
+            plot = self.blobtools_blob_graph())
+
+    def blobtools_parse(self, myfile, contents_of_file):
+        self.blobtools_cov_data[myfile['s_name']]=dict()
+        COV=(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 130, 140, 150, 500000000000)
+        for bin in COV:
+            self.blobtools_cov_data[myfile['s_name']].update({ bin : 0 })
+
+        self.blobtools_gc_data[myfile['s_name']]=dict()
+        GC=(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
+        for bin in GC:
+            self.blobtools_gc_data[myfile['s_name']].update({ bin : 0 })
+
+        self.blobtools_blob_data[myfile['s_name']]=dict()
+
+        for contigs in contents_of_file['dict_of_blobs'].keys():
+            cov=contents_of_file['dict_of_blobs'][contigs]['covs']['bam0']
+            gc=contents_of_file['dict_of_blobs'][contigs]['gc']
+            length=contents_of_file['dict_of_blobs'][contigs]['length']
+            self.blobtools_blob_data[myfile['s_name']].update({ 'x': cov, 'y': gc })
+            for cov_pos in range(1, len(COV)-1):
+                X_value=float(COV[cov_pos])
+                bigger_X_value=float(COV[cov_pos + 1])
+                if cov>X_value and cov<bigger_X_value:
+                    prior_value = self.blobtools_cov_data[myfile['s_name']][X_value]
+                    new_value = prior_value + length
+                    self.blobtools_cov_data[myfile['s_name']][X_value]=new_value
+            for gc_pos in range(1, len(GC)-1):
+                X_value=float(GC[gc_pos])
+                bigger_X_value=float(GC[gc_pos + 1])
+                if gc>X_value and gc<bigger_X_value:
+                    prior_value = self.blobtools_gc_data[myfile['s_name']][X_value]
+                    new_value = prior_value + length
+                    self.blobtools_gc_data[myfile['s_name']][X_value]=new_value
+
     def blobtools_mapping(self):
         config = {
             'id': 'blobtools-1',
@@ -106,3 +175,30 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': 'Number of Reads'
             }
         return bargraph.plot(self.blobtools_species_data, self.blobtools_species_keys, config)
+
+    def blobtools_gc_graph(self):
+        config = {
+            'id': 'blobtools-3',
+            'title': 'Blobtools: GC Content',
+            'xlab': 'GC Proportion',
+            'ylab': 'Number of Reads'
+        }
+        return linegraph.plot(self.blobtools_gc_data, config)
+
+    def blobtools_cov_graph(self):
+        config = {
+            'id': 'blobtools-4',
+            'title': 'Blobtools: Coverage Distribution',
+            'xmax': 150,
+            'xlab': 'Coverage',
+            'ylab': 'Number of Reads',
+        }
+        return linegraph.plot(self.blobtools_cov_data, config)
+
+    def blobtools_blob_graph(self):
+        config = {
+            'id': 'blobtools-5',
+            'title': 'Blobtools: blobplots',
+            'showInLegend': True,
+        }
+        return scatter.plot(self.blobtools_blob_data, config)
