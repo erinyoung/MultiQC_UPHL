@@ -57,6 +57,10 @@ def UPHL_plugin_execution_start():
         config.update_dict( config.sp, { 'blobtools/table': { 'fn' : '*.blobDB.table.txt' }})
     if 'seqsero' not in config.sp:
         config.update_dict( config.sp, { 'seqsero': { 'fn' : 'Seqsero_result.txt' }})
+    if 'roary/qc' not in config.sp:
+        config.update_dict( config.sp, { 'roary/qc': { 'fn' : 'qc_report.csv' }})
+    if 'roary/summary' not in config.sp:
+        config.update_dict( config.sp, { 'roary/summary': { 'fn' : 'summary_statistics.txt' }})
 
     # Some additional filename cleaning
     config.fn_clean_exts.extend([
