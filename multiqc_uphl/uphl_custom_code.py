@@ -61,6 +61,17 @@ def UPHL_plugin_execution_start():
         config.update_dict( config.sp, { 'roary/qc': { 'fn' : 'qc_report.csv' }})
     if 'roary/summary' not in config.sp:
         config.update_dict( config.sp, { 'roary/summary': { 'fn' : 'summary_statistics.txt' }})
+    if 'roary/gene_presence' not in config.sp:
+        config.update_dict( config.sp, { 'roary/gene_presence': { 'fn' : 'gene_presence_absence.Rtab' }})
+    if 'roary/conserved_genes' not in config.sp:
+        config.update_dict( config.sp, { 'roary/conserved_genes': { 'fn' : 'number_of_conserved_genes.Rtab' }})
+    if 'roary/total_genes' not in config.sp:
+        config.update_dict( config.sp, { 'roary/total_genes': { 'fn' : 'number_of_genes_in_pan_genome.Rtab' }})
+    if 'roary/new_genes' not in config.sp:
+        config.update_dict( config.sp, { 'roary/new_genes': { 'fn' : 'number_of_new_genes.Rtab' }})
+    if 'roary/unique_genes' not in config.sp:
+        config.update_dict( config.sp, { 'roary/unique_genes': { 'fn' : 'number_of_unique_genes.Rtab' }})
+        
 
     # Some additional filename cleaning
     config.fn_clean_exts.extend([
