@@ -31,7 +31,7 @@ setup(
             'mash = multiqc_uphl.modules.mash:MultiqcModule',
 #            'minknow = multiqc_uphl.modules.minknow:MultiqcModule',
 #            'nanopolish = multiqc_uphl.modules.nanopolish:MultiqcModule',
-#            'roary = multiqc_uphl.modules.roary:MultiqcModule',
+            'roary = multiqc_uphl.modules.roary:MultiqcModule',
             'seqyclean = multiqc_uphl.modules.seqyclean:MultiqcModule',
             'seqsero = multiqc_uphl.modules.seqsero:MultiqcModule',
 #            'unicycler = multiqc_uphl.modules.unicycler:MultiqcModule',
