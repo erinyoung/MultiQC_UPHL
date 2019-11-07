@@ -9,7 +9,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'multiqc_uphl',
-    version = '2019.10.23',
+    version = '2019.11.05',
     author = 'Phil Ewels',
     author_email = 'eriny@utah.gov',
     description = "MultiQC plugin for the Utah Public Health Laboratory",
